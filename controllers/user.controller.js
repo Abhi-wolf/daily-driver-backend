@@ -95,6 +95,8 @@ const registerUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "none",
+    maxAge: 5 * 24 * 60 * 60 * 1000,
   };
 
   // set the cookies and return email and name with the response object
@@ -161,6 +163,8 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "none",
+    maxAge: 5 * 24 * 60 * 60 * 1000,
   };
 
   // set the cookies and return email and name with the response object
