@@ -17,7 +17,10 @@ import { limiter } from "./middlewares/rateLimit.middleware.js";
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allow requests from this origin
+    origin: [
+      "http://localhost:5173",
+      "https://daily-driver-frontend.vercel.app",
+    ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true, // Allow cookies to be sent with requests
   })
