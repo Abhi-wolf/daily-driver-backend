@@ -9,6 +9,7 @@ import {
   userFileExplorer,
   forgotPassword,
   resetPassword,
+  updateProfile,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -41,8 +42,11 @@ router.route("/login").post(loginUser);
  * @returns {object} 200 - Success
  * @returns {object} 401 - Unauthorized
  */
+router.route("/").patch(verifyJWT, updateProfile);
+router.route("/").get(verifyJWT, getUser);
+
 router.route("/logout").post(verifyJWT, logoutUser);
-router.route("/currentUser").post(verifyJWT, getUser);
+
 router.route("/updateFolder").post(verifyJWT, updateFolder);
 router.route("/getUserFileExplorer").get(verifyJWT, userFileExplorer);
 router.route("/forgotPassword").patch(forgotPassword);

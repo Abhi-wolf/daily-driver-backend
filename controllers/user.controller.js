@@ -1,4 +1,7 @@
 import { User } from "../models/user.model.js";
+import { Song } from "../models/song.model.js";
+import { Bookmark } from "../models/bookmark.model.js";
+import { Project } from "../models/project.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -81,11 +84,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
 
-  // // return the newly created user
-  // return res
-  //   .status(201)
-  //   .json(new ApiResponse(200, createdUser, "User registered Successfully"));
-
   // destructure access and refresh token from the function
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     createdUser._id
@@ -143,7 +141,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // if user does not exist return new error with status code 404
   if (!existinguser) {
-    throw new ApiError(404, "User does not exits");
+    throw new ApiError(404, "Invalid email or password");
   }
 
   // verify the emtered password
@@ -151,7 +149,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // if password is not correct return a new error with status code 401
   if (!isPasswordCorrect) {
-    throw new ApiError(401, "Invalid user credentials");
+    throw new ApiError(401, "Invalid email or password");
   }
 
   // destructure access and refresh token from the function
@@ -181,6 +179,8 @@ const loginUser = asyncHandler(async (req, res) => {
             name: existinguser.name,
             profilePic: existinguser.profilePic,
           },
+          taskLabels: existinguser.labels,
+          bookmarkLabels: existinguser.bookmarkLabels,
           accessToken,
           refreshToken,
         },
@@ -232,11 +232,10 @@ const logoutUser = asyncHandler(async (req, res) => {
  * @access Public
  */
 const getUser = asyncHandler(async (req, res) => {
-  // destructure email and password from the request body
-
   const userId = req.user._id;
+
   // return a new error with status code 400 if email or password is not found in the request body
-  if (userId) {
+  if (!userId) {
     throw new ApiError(400, "Unauthorized access");
   }
 
@@ -248,21 +247,25 @@ const getUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exits");
   }
 
+  const songs = (await Song.find({ createdBy: userId }))?.length;
+  const bookmarks = (await Bookmark.find({ createdBy: userId }))?.length;
+  const projects = (await Project.find({ createdBy: userId }))?.length;
+
+  const data = {
+    user: {
+      email: existinguser.email,
+      name: existinguser.name,
+      profilePic: existinguser.profilePic,
+    },
+    songs,
+    bookmarks,
+    projects,
+  };
+
   // set the cookies and return email and name with the response object
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        user: {
-          email: existinguser.email,
-          name: existinguser.name,
-          profilePic: existinguser.profilePic,
-          userFileFolder: existinguser.userFileFolder,
-        },
-      },
-      "User fetched Successfully"
-    )
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, data, "User fetched Successfully"));
 });
 
 const updateFolder = asyncHandler(async (req, res) => {
@@ -406,6 +409,41 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 });
 
+const updateProfile = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(400, "User not found");
+  }
+
+  if (req.body?.currentPassword) {
+    const isPasswordCorrect = await user.isPasswordCorrect(
+      req.body.currentPassword
+    );
+
+    if (!isPasswordCorrect) {
+      throw new ApiError(400, "Current password is not correct");
+    }
+  }
+
+  if (req.body.name) user.name = req.body.name;
+  if (req.body.email) user.email = req.body.email;
+  if (req.body.newPassword) user.password = req.body.newPassword;
+
+  try {
+    await user.save();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Profile updated successfully"));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json(new ApiError(500, "Internal Error"));
+  }
+});
+
 export {
   registerUser,
   loginUser,
@@ -415,4 +453,5 @@ export {
   userFileExplorer,
   forgotPassword,
   resetPassword,
+  updateProfile,
 };

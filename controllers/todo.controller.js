@@ -1,5 +1,4 @@
 import { Todo } from "../models/todo.model.js";
-import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -43,19 +42,19 @@ const getTodos = asyncHandler(async (req, res) => {
   }
 
   try {
-    const { filter } = req.query; // Get the filter from the query parameters
+    const { filter } = req.query;
 
     let todos = [];
 
     if (filter === "today") {
       const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0); // Start of today
-      const tomorrowStart = new Date(todayStart); // Start of tomorrow
+      todayStart.setHours(0, 0, 0, 0);
+      const tomorrowStart = new Date(todayStart);
       tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
       todos = await Todo.find({
-        createdBy: userId, // Ensure to filter by user ID
-        dueDate: { $gte: todayStart, $lt: tomorrowStart }, // Range from start of today to start of tomorrow
+        createdBy: userId,
+        dueDate: { $gte: todayStart, $lt: tomorrowStart },
       });
     } else if (filter === "this-week") {
       const startOfWeek = new Date();
@@ -64,17 +63,17 @@ const getTodos = asyncHandler(async (req, res) => {
       endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
 
       todos = await Todo.find({
-        createdBy: userId, // Ensure to filter by user ID
+        createdBy: userId,
         dueDate: { $gte: startOfWeek, $lte: endOfWeek },
       });
-    } else {
+    } else if (filter === "next-week") {
       const startOfNextWeek = new Date();
       startOfNextWeek.setDate(
         startOfNextWeek.getDate() - startOfNextWeek.getDay() + 7
-      ); // Move to the start of next week
+      );
 
-      const endOfNextWeek = new Date(startOfNextWeek); // Create a new Date instance based on startOfNextWeek
-      endOfNextWeek.setDate(endOfNextWeek.getDate() + 6); // Set it to the end of next week
+      const endOfNextWeek = new Date(startOfNextWeek);
+      endOfNextWeek.setDate(endOfNextWeek.getDate() + 6);
 
       todos = await Todo.find({
         createdBy: userId,
@@ -82,7 +81,20 @@ const getTodos = asyncHandler(async (req, res) => {
           $gte: startOfNextWeek,
           $lte: endOfNextWeek,
         },
-      }); // Ensure to use createdBy for user filtering
+      });
+    } else {
+      const startDate = req.query?.startDate;
+      const endDate = req.query?.endDate;
+
+      if (startDate && endDate) {
+        todos = await Todo.find({
+          createdBy: userId,
+          dueDate: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        });
+      }
     }
 
     return res.status(200).json(new ApiResponse(200, todos, "User todos"));

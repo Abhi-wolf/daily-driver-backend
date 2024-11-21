@@ -96,7 +96,6 @@ const getExpenses = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { startDate, endDate } = req.query;
 
-  console.log(req.query);
 
   try {
     const start = startDate === "null" ? new Date() : new Date(startDate);

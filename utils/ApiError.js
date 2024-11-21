@@ -1,3 +1,5 @@
+import logger from "./logger.js";
+
 class ApiError extends Error {
   constructor(
     statusCode,
