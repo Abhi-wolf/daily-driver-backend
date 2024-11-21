@@ -1,4 +1,4 @@
-// import "./config/instrument.js";
+import "./config/instrument.js";
 
 import express from "express";
 import cors from "cors";
@@ -19,7 +19,7 @@ import bookMarkRouter from "./routes/bookmark.routes.js";
 import { limiter } from "./middlewares/rateLimit.middleware.js";
 import logger from "./utils/logger.js";
 import delayMiddleware from "./middlewares/delay.middleware.js";
-// import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 
 const app = express();
 
@@ -78,7 +78,7 @@ app.use("/api/v1/bookmarks", bookMarkRouter);
 //   throw new Error("My first Sentry error!");
 // });
 
-// Sentry.setupExpressErrorHandler(app);
+Sentry.setupExpressErrorHandler(app);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
