@@ -2,6 +2,7 @@ import { Event } from "../models/event.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import * as Sentry from "@sentry/node";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const addEvent = asyncHandler(async (req, res) => {
@@ -38,6 +39,7 @@ const addEvent = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, event, "Event successfully registered"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -87,7 +89,7 @@ const deleteEvent = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Event successfully deleted"));
   } catch (error) {
-    console.error("Error deleting event:", error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -127,6 +129,7 @@ const updateEvent = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, updatedEvent, "Event successfully updated"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });

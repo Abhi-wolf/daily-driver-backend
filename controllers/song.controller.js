@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteFile, uploadFile } from "../utils/uploadFile.js";
+import * as Sentry from "@sentry/node";
 
 const addSong = asyncHandler(async (req, res) => {
   const { songName, songImageUrl, playListName } = req.body;
@@ -59,7 +60,7 @@ const addSong = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, song, "Song successfully uploaded"));
   } catch (error) {
-    console.error("error = ", error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -102,6 +103,7 @@ const deleteSong = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Song successfully deleted"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });

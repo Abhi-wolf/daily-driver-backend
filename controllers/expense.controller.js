@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
 import { Expense } from "../models/expense.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Budget } from "../models/budget.model.js";
+import * as Sentry from "@sentry/node";
 
 const addExpense = asyncHandler(async (req, res) => {
   const { category, description, date, amount, modeOfPayment } = req.body;
@@ -34,7 +34,7 @@ const addExpense = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, expense, "Expense added successfully"));
   } catch (error) {
-    console.error(error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -67,6 +67,7 @@ const updateExpense = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, updatedExpense, "Expense added successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -88,6 +89,7 @@ const deleteExpense = asyncHandler(async (req, res) => {
   try {
     const expense = await Expense.findByIdAndDelete(expenseId);
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -95,7 +97,6 @@ const deleteExpense = asyncHandler(async (req, res) => {
 const getExpenses = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { startDate, endDate } = req.query;
-
 
   try {
     const start = startDate === "null" ? new Date() : new Date(startDate);
@@ -156,7 +157,7 @@ const getExpenses = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.error(error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -231,7 +232,7 @@ const getExpensesByMonth = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, monthlyExpenses, "Success"));
   } catch (error) {
-    console.error(error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -313,7 +314,7 @@ const getExpenseSummary = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    console.error(error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });

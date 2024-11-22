@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
+import * as Sentry from "@sentry/node";
 
 /**
  * @desc Generate new access token and refresh token
@@ -32,6 +33,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     // return access token and refresh token
     return { accessToken, refreshToken };
   } catch (error) {
+    Sentry.captureException(error);
     throw new ApiError(500, "Something went wrong while generating token");
   }
 };
@@ -71,6 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
       password,
     });
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 
@@ -363,6 +366,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, "Password Reset Email sent successfully"));
     }
   } catch (error) {
+    Sentry.captureException(error);
     if (user) {
       user.passwordResetExpires = undefined;
       user.passwordResetToken = undefined;
@@ -405,6 +409,7 @@ const resetPassword = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Password reset successfull"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal Error"));
   }
 });
@@ -439,7 +444,7 @@ const updateProfile = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Profile updated successfully"));
   } catch (error) {
-    console.error(error);
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal Error"));
   }
 });

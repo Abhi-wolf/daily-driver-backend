@@ -1,12 +1,22 @@
-// Import with `import * as Sentry from "@sentry/node"` if you are using ESM
 import * as Sentry from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
+import dotenv from "dotenv";
+
+dotenv.config({ path: "./.env" });
+
+const SENTRY_DSN = process.env.SENTRY_DSN;
+
+if (!SENTRY_DSN) {
+  console.warn("Sentry DSN is not set. Errors will not be tracked.");
+}
 
 Sentry.init({
-  dsn: "https://de13d54251667dab1347c81d5950a8ad@o4508324813471744.ingest.de.sentry.io/4508324818190416",
+  dsn: SENTRY_DSN || null,
   integrations: [nodeProfilingIntegration()],
-  // Tracing
-  tracesSampleRate: 1.0, //  Capture 100% of the transactions
+  registerEsmLoaderHooks: {
+    onlyIncludeInstrumentedModules: true,
+  },
+  tracesSampleRate: 1.0,
 });
 
 Sentry.profiler.startProfiler();

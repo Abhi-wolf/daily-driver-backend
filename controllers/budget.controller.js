@@ -2,6 +2,7 @@ import { Budget } from "../models/budget.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import * as Sentry from "@sentry/node";
 
 const updateBudget = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -37,6 +38,7 @@ const updateBudget = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, budget, "Budget updated successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });

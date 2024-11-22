@@ -1,4 +1,4 @@
-import "./config/instrument.js";
+import "./config/instrument.mjs";
 
 import express from "express";
 import cors from "cors";
@@ -18,7 +18,6 @@ import budgetRouter from "./routes/budget.routes.js";
 import bookMarkRouter from "./routes/bookmark.routes.js";
 import { limiter } from "./middlewares/rateLimit.middleware.js";
 import logger from "./utils/logger.js";
-import delayMiddleware from "./middlewares/delay.middleware.js";
 import * as Sentry from "@sentry/node";
 
 const app = express();
@@ -57,10 +56,7 @@ app.use(express.urlencoded({ extended: true, limit: "30mb" }));
 app.use(helmet());
 app.use(cookieParser());
 
-// rate limit middleware
 app.use(limiter);
-
-app.use(delayMiddleware);
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/event", eventRouter);
@@ -73,9 +69,10 @@ app.use("/api/v1/files", fileRouter);
 app.use("/api/v1/expense", expenseRouter);
 app.use("/api/v1/budget", budgetRouter);
 app.use("/api/v1/bookmarks", bookMarkRouter);
+
 // app.get("/debug-sentry", function mainHandler(req, res) {
 //   console.error("sentry error");
-//   throw new Error("My first Sentry error!");
+//   throw new Error("My second Sentry error!");
 // });
 
 Sentry.setupExpressErrorHandler(app);
@@ -84,6 +81,7 @@ app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
   logger.error(err.stack);
+  // Sentry.captureException(err);
 
   res.status(statusCode).json({
     success: false,

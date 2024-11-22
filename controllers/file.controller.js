@@ -3,6 +3,7 @@ import { Folder } from "../models/folder.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import * as Sentry from "@sentry/node";
 
 const createFile = asyncHandler(async (req, res) => {
   const { fileName, parentFolder, data } = req.body;
@@ -34,8 +35,8 @@ const createFile = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, newFile, "File created successfully"));
   } catch (error) {
-    console.error(error);
-    throw new ApiError(500, "Internal error");
+    Sentry.captureException(error);
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 
@@ -67,7 +68,7 @@ const updateFile = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, "File updated successfully"));
   } catch (error) {
     console.error(error);
-    throw new ApiError(500, "Internal error");
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 
@@ -84,8 +85,8 @@ const getAllFiles = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, files, "All the user files"));
   } catch (error) {
-    console.error(error);
-    throw new ApiError(500, "Internal error");
+    Sentry.captureException(error);
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 
@@ -129,8 +130,8 @@ const deleteFile = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "File deleted successfully"));
   } catch (error) {
-    console.error(error);
-    throw new ApiError(500, "Internal error");
+    Sentry.captureException(error);
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 
@@ -164,8 +165,8 @@ const restoreFile = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "File restored successfully"));
   } catch (error) {
-    console.error(error);
-    throw new ApiError(500, "Internal error");
+    Sentry.captureException(error);
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 
@@ -195,8 +196,8 @@ const permanentDeleteFile = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "File deleted permanently"));
   } catch (error) {
-    console.error(error);
-    throw new ApiError(500, "Internal error");
+    Sentry.captureException(error);
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 
@@ -211,8 +212,8 @@ const getAllDeletedFiles = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, files, "Deleted Files"));
   } catch (error) {
-    console.error(error);
-    throw new ApiError(500, "Internal error");
+    Sentry.captureException(error);
+    return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
 

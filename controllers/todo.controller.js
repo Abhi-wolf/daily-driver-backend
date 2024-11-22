@@ -2,6 +2,7 @@ import { Todo } from "../models/todo.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import * as Sentry from "@sentry/node";
 
 const createTodo = asyncHandler(async (req, res) => {
   const { todoName, todoDescription, dueDate, label, priority } = req.body;
@@ -30,6 +31,7 @@ const createTodo = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, newTodo, "Todo successfully created"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -99,6 +101,7 @@ const getTodos = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, todos, "User todos"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -128,6 +131,7 @@ const deleteTodo = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Todo deleted successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -164,6 +168,7 @@ const updateTodo = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, updatedTodo, "Todo deleted successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -190,6 +195,7 @@ const updateTodoStatus = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, updatedTodo, "Todo deleted successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });

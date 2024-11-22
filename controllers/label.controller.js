@@ -2,6 +2,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import * as Sentry from "@sentry/node";
 
 const addNewLabel = asyncHandler(async (req, res) => {
   const { labelName } = req.body;
@@ -31,6 +32,7 @@ const addNewLabel = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Label successfully created"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -81,6 +83,7 @@ const deleteLabel = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Label deleted successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });

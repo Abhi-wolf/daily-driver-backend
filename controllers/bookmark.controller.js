@@ -1,8 +1,8 @@
 import { Bookmark } from "../models/bookmark.model.js";
-import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import * as Sentry from "@sentry/node";
 
 const addBookmark = asyncHandler(async (req, res) => {
   const { url, title, labels, category } = req.body;
@@ -36,6 +36,7 @@ const addBookmark = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, newbookmark, "Bookmarked successfully "));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -62,6 +63,7 @@ const updateBookmark = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, newbookmark, "Bookmarked successfully "));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
@@ -112,6 +114,7 @@ const deleteBookmark = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Bookmark deleted successfully"));
   } catch (error) {
+    Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
 });
