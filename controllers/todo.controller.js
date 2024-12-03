@@ -11,6 +11,8 @@ import {
   addDays,
 } from "date-fns";
 
+import moment from "moment-timezone";
+
 const createTodo = asyncHandler(async (req, res) => {
   const { todoName, todoDescription, dueDate, label, priority } = req.body;
 
@@ -43,66 +45,134 @@ const createTodo = asyncHandler(async (req, res) => {
   }
 });
 
+// const getTodos = asyncHandler(async (req, res) => {
+//   const userId = req.user._id;
+
+//   if (!userId) {
+//     throw new ApiError(400, "Unauthorized access");
+//   }
+
+//   const { filter, } = req.query;
+
+//   try {
+//     let todos = [];
+
+//     if (filter === "today") {
+//       const todayStart = startOfDay(new Date());
+//       const todayEnd = endOfDay(new Date());
+
+//       todos = await Todo.find({
+//         createdBy: userId,
+//         dueDate: { $gte: todayStart, $lt: todayEnd },
+//       });
+//     } else if (filter === "this-week") {
+//       const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+//       const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+
+//       todos = await Todo.find({
+//         createdBy: userId,
+//         dueDate: { $gte: weekStart, $lte: weekEnd },
+//       });
+//     } else if (filter === "next-week") {
+//       const nextWeekStart = addDays(
+//         startOfWeek(new Date(), { weekStartsOn: 0 }),
+//         7
+//       );
+//       const nextWeekEnd = endOfWeek(nextWeekStart, { weekStartsOn: 0 });
+
+//       todos = await Todo.find({
+//         createdBy: userId,
+//         dueDate: {
+//           $gte: nextWeekStart,
+//           $lte: nextWeekEnd,
+//         },
+//       });
+//     } else {
+//       const startDate = req.query?.startDate;
+//       const endDate = req.query?.endDate;
+
+//       if (startDate && endDate) {
+//         todos = await Todo.find({
+//           createdBy: userId,
+//           dueDate: {
+//             $gte: startDate,
+//             $lte: endDate,
+//           },
+//         });
+//       }
+//     }
+
+//     return res.status(200).json(new ApiResponse(200, todos, "User todos"));
+//   } catch (error) {
+//     console.error(error);
+//     Sentry.captureException(error);
+//     return res.status(500).json(new ApiError(500, "Internal error"));
+//   }
+// });
+
 const getTodos = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
   if (!userId) {
-    throw new ApiError(400, "Unauthorized access");
+    return res.status(400).json(new ApiError(400, "Unauthorized access"));
   }
 
-  const { filter } = req.query;
+  const { filter, startDate, endDate, timezone } = req.query;
+
+  if (!timezone) {
+    return res.status(400).json(new ApiError(400, "Timezone is required"));
+  }
 
   try {
     let todos = [];
 
     if (filter === "today") {
-      const todayStart = startOfDay(new Date());
-      const todayEnd = endOfDay(new Date());
+      const todayStart = moment.tz(timezone).startOf("day").toDate();
+      const todayEnd = moment.tz(timezone).endOf("day").toDate();
 
       todos = await Todo.find({
         createdBy: userId,
         dueDate: { $gte: todayStart, $lt: todayEnd },
       });
     } else if (filter === "this-week") {
-      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+      const weekStart = moment.tz(timezone).startOf("week").toDate();
+      const weekEnd = moment.tz(timezone).endOf("week").toDate();
 
       todos = await Todo.find({
         createdBy: userId,
         dueDate: { $gte: weekStart, $lte: weekEnd },
       });
     } else if (filter === "next-week") {
-      const nextWeekStart = addDays(
-        startOfWeek(new Date(), { weekStartsOn: 0 }),
-        7
-      );
-      const nextWeekEnd = endOfWeek(nextWeekStart, { weekStartsOn: 0 });
+      const nextWeekStart = moment
+        .tz(timezone)
+        .startOf("week")
+        .add(1, "week")
+        .toDate();
+      const nextWeekEnd = moment
+        .tz(timezone)
+        .endOf("week")
+        .add(1, "week")
+        .toDate();
 
       todos = await Todo.find({
         createdBy: userId,
+        dueDate: { $gte: nextWeekStart, $lte: nextWeekEnd },
+      });
+    } else if (startDate && endDate) {
+      todos = await Todo.find({
+        createdBy: userId,
         dueDate: {
-          $gte: nextWeekStart,
-          $lte: nextWeekEnd,
+          $gte: moment.tz(startDate, timezone).toDate(),
+          $lte: moment.tz(endDate, timezone).toDate(),
         },
       });
     } else {
-      const startDate = req.query?.startDate;
-      const endDate = req.query?.endDate;
-
-      if (startDate && endDate) {
-        todos = await Todo.find({
-          createdBy: userId,
-          dueDate: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        });
-      }
+      todos = [];
     }
 
     return res.status(200).json(new ApiResponse(200, todos, "User todos"));
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching todos:", error);
     Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
