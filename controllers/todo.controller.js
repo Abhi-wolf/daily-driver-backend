@@ -3,6 +3,13 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as Sentry from "@sentry/node";
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+} from "date-fns";
 
 const createTodo = asyncHandler(async (req, res) => {
   const { todoName, todoDescription, dueDate, label, priority } = req.body;
@@ -43,45 +50,39 @@ const getTodos = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Unauthorized access");
   }
 
-  try {
-    const { filter } = req.query;
+  const { filter } = req.query;
 
+  try {
     let todos = [];
 
     if (filter === "today") {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const tomorrowStart = new Date(todayStart);
-      tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+      const todayStart = startOfDay(new Date());
+      const todayEnd = endOfDay(new Date());
 
       todos = await Todo.find({
         createdBy: userId,
-        dueDate: { $gte: todayStart, $lt: tomorrowStart },
+        dueDate: { $gte: todayStart, $lt: todayEnd },
       });
     } else if (filter === "this-week") {
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const endOfWeek = new Date();
-      endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
+      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
       todos = await Todo.find({
         createdBy: userId,
-        dueDate: { $gte: startOfWeek, $lte: endOfWeek },
+        dueDate: { $gte: weekStart, $lte: weekEnd },
       });
     } else if (filter === "next-week") {
-      const startOfNextWeek = new Date();
-      startOfNextWeek.setDate(
-        startOfNextWeek.getDate() - startOfNextWeek.getDay() + 7
+      const nextWeekStart = addDays(
+        startOfWeek(new Date(), { weekStartsOn: 0 }),
+        7
       );
-
-      const endOfNextWeek = new Date(startOfNextWeek);
-      endOfNextWeek.setDate(endOfNextWeek.getDate() + 6);
+      const nextWeekEnd = endOfWeek(nextWeekStart, { weekStartsOn: 0 });
 
       todos = await Todo.find({
         createdBy: userId,
         dueDate: {
-          $gte: startOfNextWeek,
-          $lte: endOfNextWeek,
+          $gte: nextWeekStart,
+          $lte: nextWeekEnd,
         },
       });
     } else {
@@ -101,6 +102,7 @@ const getTodos = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, todos, "User todos"));
   } catch (error) {
+    console.error(error);
     Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
