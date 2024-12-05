@@ -76,22 +76,18 @@ const deleteExpense = asyncHandler(async (req, res) => {
   const { expenseId } = req.params;
   const userId = req.user._id;
 
-  console.log(expenseId);
-
   if (!expenseId) {
     throw new ApiError(400, "Expense Id is required");
   }
 
   const expense = await Expense.findById(expenseId);
 
-  console.log(expense);
-
   if (!expense || !expense.createdBy.equals(userId)) {
     throw new ApiError(400, "Expense not found");
   }
 
   try {
-    const expense = await Expense.findByIdAndDelete(expenseId);
+    await Expense.findByIdAndDelete(expenseId);
 
     return res
       .status(200)
