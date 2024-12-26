@@ -87,6 +87,23 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
 
+  const eventData = {
+    eventName: "New User",
+    domain: `${process.env.FRONTEND_URL}`,
+    eventDescription: `Email : ${email}`,
+  };
+
+  const response = await fetch(`${process.env.FEEDLYTIC_API_URL}/events`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.FEEDLYTIC_API_KEY}`,
+      body: JSON.stringify(eventData),
+    },
+  });
+
+  console.log(response);
+
   // destructure access and refresh token from the function
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     createdUser._id

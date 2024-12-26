@@ -121,7 +121,6 @@ const getFolder = asyncHandler(async (req, res) => {
         (item) => item.itemId !== null
       );
       const mappedItems = filteredItems.map((item) => item.itemId);
-
       folder.items = mappedItems;
     }
 
@@ -282,7 +281,10 @@ const renameFolder = asyncHandler(async (req, res) => {
   const { newName } = req.body;
   const userId = req.user._id;
 
-  if (!folderId) {
+  console.log(req.body);
+  console.log("folderId = ", folderId);
+
+  if (!folderId || !newName) {
     throw new ApiError(404, "Folder id is required");
   }
 

@@ -2,7 +2,7 @@
 const delayMiddleware = (req, res, next) => {
   setTimeout(() => {
     next();
-  }, 100);
+  }, 10000);
 };
 
 export default delayMiddleware;

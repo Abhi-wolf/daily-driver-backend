@@ -19,8 +19,11 @@ import bookMarkRouter from "./routes/bookmark.routes.js";
 import { limiter } from "./middlewares/rateLimit.middleware.js";
 import logger from "./utils/logger.js";
 import * as Sentry from "@sentry/node";
+import delayMiddleware from "./middlewares/delay.middleware.js";
+import job from "./utils/cronJob.js";
 
 const app = express();
+job.start();
 
 app.use(
   cors({
@@ -57,6 +60,7 @@ app.use(helmet());
 app.use(cookieParser());
 
 app.use(limiter);
+// app.use(delayMiddleware);
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/event", eventRouter);
@@ -70,10 +74,9 @@ app.use("/api/v1/expense", expenseRouter);
 app.use("/api/v1/budget", budgetRouter);
 app.use("/api/v1/bookmarks", bookMarkRouter);
 
-// app.get("/debug-sentry", function mainHandler(req, res) {
-//   console.error("sentry error");
-//   throw new Error("My second Sentry error!");
-// });
+app.use("/api/v1/test", (req, res) => {
+  return res.status(200).json({ success: true, message: "Test successfull" });
+});
 
 Sentry.setupExpressErrorHandler(app);
 
