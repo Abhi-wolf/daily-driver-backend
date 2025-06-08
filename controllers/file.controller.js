@@ -44,7 +44,7 @@ const updateFile = asyncHandler(async (req, res) => {
   const { fileId } = req.params;
   const userId = req.user._id;
 
-  console.log("BODY= ", req.body);
+  // console.log("BODY= ", req.body);
 
   if (!fileId) {
     throw new ApiError(404, "File id is required");

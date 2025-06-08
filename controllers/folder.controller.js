@@ -281,8 +281,8 @@ const renameFolder = asyncHandler(async (req, res) => {
   const { newName } = req.body;
   const userId = req.user._id;
 
-  console.log(req.body);
-  console.log("folderId = ", folderId);
+  // console.log(req.body);
+  // console.log("folderId = ", folderId);
 
   if (!folderId || !newName) {
     throw new ApiError(404, "Folder id is required");

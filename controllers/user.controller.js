@@ -48,23 +48,15 @@ const generateAccessAndRefreshToken = async (userId) => {
  * @access Public
  */
 const registerUser = asyncHandler(async (req, res) => {
-  // destructure name,email and password from the request body
   const { name, email, password } = req.body;
-
-  // check if all the fields are present
   if ([name, email, password].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "All fields are required");
   }
-
-  // check if the user already exist with the same email
   const existingUser = await User.findOne({ email });
 
-  // if the user already exist throw a new error with status code 409
   if (existingUser) {
     throw new ApiError(409, "User with email already exists");
   }
-
-  // craete new user
   let user = {};
   try {
     user = await User.create({
@@ -76,23 +68,17 @@ const registerUser = asyncHandler(async (req, res) => {
     Sentry.captureException(error);
     return res.status(500).json(new ApiError(500, "Internal error"));
   }
-
-  // fetch the newly created user
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-
-  // check if the user is created or not if not then return new error with status code 500
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
-
   const eventData = {
     eventName: "New User",
     domain: `${process.env.FRONTEND_URL}`,
     eventDescription: `Email : ${email}`,
   };
-
   const response = await fetch(`${process.env.FEEDLYTIC_API_URL}/events`, {
     method: "POST",
     headers: {
@@ -101,23 +87,15 @@ const registerUser = asyncHandler(async (req, res) => {
       body: JSON.stringify(eventData),
     },
   });
-
-  console.log(response);
-
-  // destructure access and refresh token from the function
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     createdUser._id
   );
-
-  // define options for cookie
   const options = {
     httpOnly: true,
     secure: true,
     sameSite: "none",
     maxAge: 5 * 24 * 60 * 60 * 1000,
   };
-
-  // set the cookies and return email and name with the response object
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
